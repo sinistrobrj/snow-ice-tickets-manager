@@ -1,231 +1,178 @@
 
 import { useState } from "react";
 import { Card } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { 
-  BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, 
-  ResponsiveContainer, PieChart, Pie, Cell 
-} from "recharts";
-import { 
-  CalendarDays, 
-  Calendar, 
-  CalendarClock,
-  Download
-} from "lucide-react";
-
-// Sample data for charts
-const dailyData = [
-  { date: "20/06", sales: 9, revenue: 810 },
-  { date: "21/06", sales: 12, revenue: 1080 },
-  { date: "22/06", sales: 15, revenue: 1350 },
-  { date: "23/06", sales: 25, revenue: 2250 },
-  { date: "24/06", sales: 18, revenue: 1620 },
-  { date: "25/06", sales: 22, revenue: 1980 },
-  { date: "26/06", sales: 28, revenue: 2520 },
-];
-
-const weeklyData = [
-  { week: "Semana 1", sales: 45, revenue: 4050 },
-  { week: "Semana 2", sales: 52, revenue: 4680 },
-  { week: "Semana 3", sales: 68, revenue: 6120 },
-  { week: "Semana 4", sales: 75, revenue: 6750 },
-];
-
-const monthlyData = [
-  { month: "Jan", sales: 120, revenue: 10800 },
-  { month: "Fev", sales: 150, revenue: 13500 },
-  { month: "Mar", sales: 180, revenue: 16200 },
-  { month: "Abr", sales: 210, revenue: 18900 },
-  { month: "Mai", sales: 240, revenue: 21600 },
-  { month: "Jun", sales: 300, revenue: 27000 },
-];
-
-const ticketTypesData = [
-  { name: "Adulto", value: 60 },
-  { name: "Criança", value: 25 },
-  { name: "Estudante", value: 35 },
-  { name: "Idoso", value: 20 },
-];
-
-const COLORS = ["#0088FE", "#00C49F", "#FFBB28", "#FF8042"];
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, PieChart, Pie, Cell } from "recharts";
 
 const Reports = () => {
-  const [activeTab, setActiveTab] = useState("daily");
-
-  const getActiveData = () => {
-    switch (activeTab) {
-      case "daily":
-        return dailyData;
-      case "weekly":
-        return weeklyData;
-      case "monthly":
-        return monthlyData;
-      default:
-        return dailyData;
-    }
-  };
-
-  const getXAxisKey = () => {
-    switch (activeTab) {
-      case "daily":
-        return "date";
-      case "weekly":
-        return "week";
-      case "monthly":
-        return "month";
-      default:
-        return "date";
-    }
-  };
-
-  const getReportTitle = () => {
-    switch (activeTab) {
-      case "daily":
-        return "Relatório Diário";
-      case "weekly":
-        return "Relatório Semanal";
-      case "monthly":
-        return "Relatório Mensal";
-      default:
-        return "Relatório";
-    }
-  };
-
+  const [startDate, setStartDate] = useState("");
+  const [endDate, setEndDate] = useState("");
+  
+  // Exemplo de dados para os relatórios
+  const salesData = [
+    { name: "Janeiro", ingressos: 120, produtos: 85, total: 18500 },
+    { name: "Fevereiro", ingressos: 150, produtos: 98, total: 22800 },
+    { name: "Março", ingressos: 180, produtos: 120, total: 27300 },
+    { name: "Abril", ingressos: 250, produtos: 160, total: 38200 },
+    { name: "Maio", ingressos: 310, produtos: 210, total: 47500 },
+  ];
+  
+  const productSalesData = [
+    { name: "Ingresso Adulto", value: 450, color: "#0088FE" },
+    { name: "Ingresso Criança", value: 300, color: "#00C49F" },
+    { name: "Ingresso Estudante", value: 200, color: "#FFBB28" },
+    { name: "Ingresso Idoso", value: 150, color: "#FF8042" },
+    { name: "Chocolate Quente", value: 320, color: "#8884d8" },
+    { name: "Luvas de Patinação", value: 180, color: "#82ca9d" },
+    { name: "Cachecol", value: 220, color: "#ffc658" },
+  ];
+  
+  const COLORS = ["#0088FE", "#00C49F", "#FFBB28", "#FF8042", "#8884d8", "#82ca9d", "#ffc658"];
+  
+  const customerData = [
+    { name: "Masculino", value: 45, color: "#0088FE" },
+    { name: "Feminino", value: 55, color: "#00C49F" },
+  ];
+  
+  const ReportContent = ({ title, description, chart }) => (
+    <Card className="p-6 mt-6">
+      <div className="mb-6">
+        <h3 className="text-xl font-semibold text-ice-800">{title}</h3>
+        <p className="text-ice-600 mt-1">{description}</p>
+      </div>
+      <div className="h-80 w-full">
+        {chart}
+      </div>
+    </Card>
+  );
+  
+  const SalesChart = () => (
+    <ResponsiveContainer width="100%" height="100%">
+      <BarChart data={salesData} margin={{ top: 20, right: 30, left: 20, bottom: 5 }}>
+        <CartesianGrid strokeDasharray="3 3" />
+        <XAxis dataKey="name" />
+        <YAxis />
+        <Tooltip 
+          formatter={(value) => [`R$ ${value}`, '']}
+          labelFormatter={(label) => `Mês: ${label}`}
+        />
+        <Legend />
+        <Bar dataKey="ingressos" name="Vendas de Ingressos" fill="#8884d8" />
+        <Bar dataKey="produtos" name="Vendas de Produtos" fill="#82ca9d" />
+      </BarChart>
+    </ResponsiveContainer>
+  );
+  
+  const ProductPieChart = () => (
+    <ResponsiveContainer width="100%" height="100%">
+      <PieChart>
+        <Pie
+          data={productSalesData}
+          cx="50%"
+          cy="50%"
+          labelLine={true}
+          outerRadius={120}
+          fill="#8884d8"
+          dataKey="value"
+          label={({ name, percent }) => `${name}: ${(percent * 100).toFixed(0)}%`}
+        >
+          {productSalesData.map((entry, index) => (
+            <Cell key={`cell-${index}`} fill={entry.color} />
+          ))}
+        </Pie>
+        <Tooltip formatter={(value) => [`${value} unidades`, '']} />
+        <Legend />
+      </PieChart>
+    </ResponsiveContainer>
+  );
+  
+  const CustomerPieChart = () => (
+    <ResponsiveContainer width="100%" height="100%">
+      <PieChart>
+        <Pie
+          data={customerData}
+          cx="50%"
+          cy="50%"
+          labelLine={true}
+          outerRadius={120}
+          fill="#8884d8"
+          dataKey="value"
+          label={({ name, percent }) => `${name}: ${(percent * 100).toFixed(0)}%`}
+        >
+          {customerData.map((entry, index) => (
+            <Cell key={`cell-${index}`} fill={entry.color} />
+          ))}
+        </Pie>
+        <Tooltip formatter={(value) => [`${value}%`, '']} />
+        <Legend />
+      </PieChart>
+    </ResponsiveContainer>
+  );
+  
   return (
     <div className="space-y-8 animate-slide-up">
       <div>
         <h1 className="text-3xl font-bold text-ice-900">Relatórios</h1>
-        <p className="text-ice-600 mt-1">Visualize os relatórios de vendas e desempenho do negócio.</p>
+        <p className="text-ice-600 mt-1">Visualize dados e métricas do seu negócio.</p>
       </div>
       
-      <Tabs defaultValue="daily" value={activeTab} onValueChange={setActiveTab} className="w-full">
-        <div className="flex justify-between items-center mb-6">
-          <TabsList className="grid grid-cols-3 w-[400px]">
-            <TabsTrigger value="daily" className="flex items-center gap-2">
-              <CalendarDays className="h-4 w-4" />
-              <span>Diário</span>
-            </TabsTrigger>
-            <TabsTrigger value="weekly" className="flex items-center gap-2">
-              <Calendar className="h-4 w-4" />
-              <span>Semanal</span>
-            </TabsTrigger>
-            <TabsTrigger value="monthly" className="flex items-center gap-2">
-              <CalendarClock className="h-4 w-4" />
-              <span>Mensal</span>
-            </TabsTrigger>
-          </TabsList>
-          
-          <Button variant="outline" className="flex items-center gap-2">
-            <Download className="h-4 w-4" />
-            <span>Exportar</span>
-          </Button>
+      <div className="flex flex-col md:flex-row gap-4">
+        <div className="w-full md:w-1/2">
+          <Label htmlFor="start-date">Data Inicial</Label>
+          <Input
+            id="start-date"
+            type="date"
+            value={startDate}
+            onChange={(e) => setStartDate(e.target.value)}
+            className="mt-1"
+          />
         </div>
+        <div className="w-full md:w-1/2">
+          <Label htmlFor="end-date">Data Final</Label>
+          <Input
+            id="end-date"
+            type="date"
+            value={endDate}
+            onChange={(e) => setEndDate(e.target.value)}
+            className="mt-1"
+          />
+        </div>
+      </div>
+      
+      <Tabs defaultValue="sales">
+        <TabsList className="grid w-full grid-cols-3">
+          <TabsTrigger value="sales">Vendas Gerais</TabsTrigger>
+          <TabsTrigger value="products">Produtos</TabsTrigger>
+          <TabsTrigger value="customers">Clientes</TabsTrigger>
+        </TabsList>
         
-        <TabsContent value="daily" className="mt-0">
-          <ReportContent data={dailyData} xAxisKey="date" title="Relatório Diário" />
+        <TabsContent value="sales">
+          <ReportContent
+            title="Relatório de Vendas"
+            description="Visão geral das vendas de ingressos e produtos ao longo do tempo."
+            chart={<SalesChart />}
+          />
         </TabsContent>
         
-        <TabsContent value="weekly" className="mt-0">
-          <ReportContent data={weeklyData} xAxisKey="week" title="Relatório Semanal" />
+        <TabsContent value="products">
+          <ReportContent
+            title="Relatório de Produtos"
+            description="Distribuição de vendas por tipo de produto e ingresso."
+            chart={<ProductPieChart />}
+          />
         </TabsContent>
         
-        <TabsContent value="monthly" className="mt-0">
-          <ReportContent data={monthlyData} xAxisKey="month" title="Relatório Mensal" />
+        <TabsContent value="customers">
+          <ReportContent
+            title="Relatório de Clientes"
+            description="Distribuição demográfica dos clientes."
+            chart={<CustomerPieChart />}
+          />
         </TabsContent>
       </Tabs>
-      
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        <Card className="glass-card p-6">
-          <h3 className="text-lg font-semibold text-ice-900 mb-4">Distribuição de Vendas por Tipo de Ingresso</h3>
-          <div className="h-[300px]">
-            <ResponsiveContainer width="100%" height="100%">
-              <PieChart>
-                <Pie
-                  data={ticketTypesData}
-                  cx="50%"
-                  cy="50%"
-                  labelLine={false}
-                  outerRadius={100}
-                  fill="#8884d8"
-                  dataKey="value"
-                  label={({ name, percent }) => `${name}: ${(percent * 100).toFixed(0)}%`}
-                >
-                  {ticketTypesData.map((entry, index) => (
-                    <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
-                  ))}
-                </Pie>
-                <Tooltip />
-                <Legend />
-              </PieChart>
-            </ResponsiveContainer>
-          </div>
-        </Card>
-        
-        <Card className="glass-card p-6">
-          <h3 className="text-lg font-semibold text-ice-900 mb-4">Resumo de Vendas</h3>
-          <div className="space-y-4">
-            <div className="grid grid-cols-2 gap-4">
-              <div className="bg-ice-50 p-4 rounded-lg">
-                <p className="text-ice-500 text-sm">Total de Ingressos</p>
-                <p className="text-ice-900 text-2xl font-bold mt-1">540</p>
-              </div>
-              <div className="bg-ice-50 p-4 rounded-lg">
-                <p className="text-ice-500 text-sm">Receita Total</p>
-                <p className="text-ice-900 text-2xl font-bold mt-1">R$ 48.600</p>
-              </div>
-            </div>
-            
-            <div className="bg-ice-50 p-4 rounded-lg">
-              <p className="text-ice-500 text-sm">Ticket Médio</p>
-              <p className="text-ice-900 text-2xl font-bold mt-1">R$ 90,00</p>
-            </div>
-            
-            <div className="bg-ice-50 p-4 rounded-lg">
-              <p className="text-ice-500 text-sm">Evento Mais Vendido</p>
-              <p className="text-ice-900 text-xl font-bold mt-1">Festival de Inverno</p>
-              <p className="text-ice-500 text-sm">210 ingressos (38.9%)</p>
-            </div>
-            
-            <div className="bg-ice-50 p-4 rounded-lg">
-              <p className="text-ice-500 text-sm">Melhor Dia de Vendas</p>
-              <p className="text-ice-900 text-xl font-bold mt-1">23/06/2023</p>
-              <p className="text-ice-500 text-sm">28 ingressos (R$ 2.520)</p>
-            </div>
-          </div>
-        </Card>
-      </div>
     </div>
-  );
-};
-
-const ReportContent = ({ data, xAxisKey, title }) => {
-  return (
-    <Card className="glass-card p-6">
-      <h3 className="text-lg font-semibold text-ice-900 mb-4">{title}</h3>
-      <div className="h-[350px]">
-        <ResponsiveContainer width="100%" height="100%">
-          <BarChart
-            data={data}
-            margin={{
-              top: 20,
-              right: 30,
-              left: 20,
-              bottom: 5,
-            }}
-          >
-            <CartesianGrid strokeDasharray="3 3" />
-            <XAxis dataKey={xAxisKey} />
-            <YAxis yAxisId="left" orientation="left" stroke="#0ea5e9" />
-            <YAxis yAxisId="right" orientation="right" stroke="#64748b" />
-            <Tooltip />
-            <Legend />
-            <Bar yAxisId="left" dataKey="sales" name="Ingressos Vendidos" fill="#0ea5e9" radius={[4, 4, 0, 0]} />
-            <Bar yAxisId="right" dataKey="revenue" name="Receita (R$)" fill="#64748b" radius={[4, 4, 0, 0]} />
-          </BarChart>
-        </ResponsiveContainer>
-      </div>
-    </Card>
   );
 };
 

@@ -7,7 +7,9 @@ import {
   Users, 
   BarChart3, 
   LogOut, 
-  Snowflake
+  Snowflake,
+  ShoppingCart,
+  Package
 } from "lucide-react";
 
 const Sidebar = () => {
@@ -20,9 +22,19 @@ const Sidebar = () => {
       icon: <LayoutDashboard className="h-5 w-5" />,
     },
     {
+      name: "Ponto de Venda",
+      path: "/sales",
+      icon: <ShoppingCart className="h-5 w-5" />,
+    },
+    {
       name: "Vendas de Ingressos",
       path: "/ticket-sales",
       icon: <Ticket className="h-5 w-5" />,
+    },
+    {
+      name: "Produtos e Estoque",
+      path: "/products",
+      icon: <Package className="h-5 w-5" />,
     },
     {
       name: "Clientes",

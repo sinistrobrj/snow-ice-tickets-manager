@@ -1,5 +1,5 @@
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -13,68 +13,25 @@ import {
   DialogTrigger,
   DialogDescription 
 } from "@/components/ui/dialog";
-import { Plus, Search, ShoppingCart, Minus, Package, Ticket } from "lucide-react";
+import { Plus, Search, ShoppingCart, Minus, Package, Ticket, Loader2 } from "lucide-react";
 import { toast } from "sonner";
-
-// Modelos de dados
-interface Product {
-  id: number;
-  name: string;
-  price: number;
-  category: "produto" | "ingresso";
-}
+import { useProducts } from "@/hooks/useProducts";
+import { useCustomers } from "@/hooks/useCustomers";
+import { useSales } from "@/hooks/useSales";
+import { Product, Customer, Sale, SaleItem } from "@/types/database.types";
 
 interface CartItem extends Product {
   quantity: number;
 }
 
-interface Sale {
-  id: number;
-  customer: string;
-  items: CartItem[];
-  total: number;
-  date: string;
-}
-
-// Dados de exemplo
-const availableProducts: Product[] = [
-  { id: 1, name: "Chocolate Quente", price: 15, category: "produto" },
-  { id: 2, name: "Luvas de Patinação", price: 45, category: "produto" },
-  { id: 3, name: "Cachecol Snow on Ice", price: 35, category: "produto" },
-  { id: 4, name: "Ingresso Adulto", price: 90, category: "ingresso" },
-  { id: 5, name: "Ingresso Criança", price: 45, category: "ingresso" },
-  { id: 6, name: "Ingresso Estudante", price: 60, category: "ingresso" },
-  { id: 7, name: "Ingresso Idoso", price: 60, category: "ingresso" },
-];
-
-const initialSales: Sale[] = [
-  { 
-    id: 1, 
-    customer: "Maria Silva", 
-    items: [
-      { id: 4, name: "Ingresso Adulto", price: 90, quantity: 2, category: "ingresso" },
-      { id: 1, name: "Chocolate Quente", price: 15, quantity: 2, category: "produto" }
-    ], 
-    total: 210, 
-    date: "02/05/2023" 
-  },
-  { 
-    id: 2, 
-    customer: "João Costa", 
-    items: [
-      { id: 5, name: "Ingresso Criança", price: 45, quantity: 3, category: "ingresso" },
-      { id: 3, name: "Cachecol Snow on Ice", price: 35, quantity: 1, category: "produto" }
-    ], 
-    total: 170, 
-    date: "03/05/2023" 
-  },
-];
-
 const Sales = () => {
-  const [sales, setSales] = useState<Sale[]>(initialSales);
+  const { products, loading: loadingProducts } = useProducts();
+  const { customers, loading: loadingCustomers } = useCustomers();
+  const { sales, saleItems, loading: loadingSales, addSale, deleteSale } = useSales();
+  
   const [searchTerm, setSearchTerm] = useState("");
   const [cart, setCart] = useState<CartItem[]>([]);
-  const [customer, setCustomer] = useState("");
+  const [selectedCustomerId, setSelectedCustomerId] = useState("");
   const [productSearch, setProductSearch] = useState("");
   const [showSaleHistory, setShowSaleHistory] = useState(true);
 
@@ -96,7 +53,7 @@ const Sales = () => {
   };
 
   // Função para remover do carrinho
-  const removeFromCart = (productId: number) => {
+  const removeFromCart = (productId: string) => {
     const existingItem = cart.find(item => item.id === productId);
     
     if (existingItem && existingItem.quantity > 1) {
@@ -114,40 +71,52 @@ const Sales = () => {
   const cartTotal = cart.reduce((total, item) => total + (item.price * item.quantity), 0);
 
   // Completar a venda
-  const completeSale = () => {
+  const completeSale = async () => {
     if (cart.length === 0) {
       toast.error("O carrinho está vazio");
       return;
     }
     
-    if (!customer) {
-      toast.error("Por favor, informe o nome do cliente");
+    if (!selectedCustomerId) {
+      toast.error("Por favor, selecione um cliente");
       return;
     }
     
-    const newSale: Sale = {
-      id: sales.length > 0 ? Math.max(...sales.map(s => s.id)) + 1 : 1,
-      customer,
-      items: [...cart],
-      total: cartTotal,
-      date: new Date().toLocaleDateString('pt-BR')
-    };
+    const success = await addSale({
+      customer: selectedCustomerId,
+      items: cart,
+      total: cartTotal
+    });
     
-    setSales([newSale, ...sales]);
-    setCart([]);
-    setCustomer("");
-    toast.success("Venda realizada com sucesso!");
+    if (success) {
+      setCart([]);
+      setSelectedCustomerId("");
+    }
   };
 
   // Filtrar produtos disponíveis
-  const filteredProducts = availableProducts.filter(product => 
-    product.name.toLowerCase().includes(productSearch.toLowerCase())
+  const filteredProducts = products.filter(product => 
+    product.name.toLowerCase().includes(productSearch.toLowerCase()) &&
+    product.stock > 0 // Só mostrar produtos com estoque
   );
 
   // Filtrar histórico de vendas
-  const filteredSales = sales.filter(sale => 
-    sale.customer.toLowerCase().includes(searchTerm.toLowerCase())
-  );
+  const filteredSales = sales.filter(sale => {
+    const customer = customers.find(c => c.id === sale.customer);
+    return customer && customer.name.toLowerCase().includes(searchTerm.toLowerCase());
+  });
+
+  // Estado de carregamento
+  const loading = loadingProducts || loadingCustomers || loadingSales;
+
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center h-96">
+        <Loader2 className="h-8 w-8 animate-spin text-snow-600" />
+        <span className="ml-2 text-ice-600">Carregando dados...</span>
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-8 animate-slide-up">
@@ -160,14 +129,18 @@ const Sales = () => {
         {/* Painel de vendas (3/5 das colunas) */}
         <Card className="glass-card p-6 col-span-1 lg:col-span-3">
           <div className="mb-4">
-            <Label htmlFor="customer-name">Nome do Cliente</Label>
-            <Input 
-              id="customer-name" 
-              placeholder="Nome do cliente" 
-              value={customer}
-              onChange={(e) => setCustomer(e.target.value)}
-              className="mt-1"
-            />
+            <Label htmlFor="customer-name">Cliente</Label>
+            <select
+              id="customer-name"
+              value={selectedCustomerId}
+              onChange={(e) => setSelectedCustomerId(e.target.value)}
+              className="w-full mt-1 flex h-10 rounded-md border border-input bg-background px-3 py-2 text-sm"
+            >
+              <option value="">Selecione um cliente</option>
+              {customers.map((customer) => (
+                <option key={customer.id} value={customer.id}>{customer.name}</option>
+              ))}
+            </select>
           </div>
           
           <div className="mb-4">
@@ -224,6 +197,7 @@ const Sales = () => {
                               size="icon" 
                               className="h-6 w-6"
                               onClick={() => addToCart(item)}
+                              disabled={item.quantity >= item.stock}
                             >
                               <Plus className="h-3 w-3" />
                             </Button>
@@ -262,7 +236,7 @@ const Sales = () => {
           
           <Button 
             onClick={completeSale} 
-            disabled={cart.length === 0 || !customer}
+            disabled={cart.length === 0 || !selectedCustomerId}
             className="w-full bg-snow-600 hover:bg-snow-700 text-white py-6 text-lg"
           >
             <ShoppingCart className="h-5 w-5 mr-2" />
@@ -298,12 +272,15 @@ const Sales = () => {
                       }
                       <span className="font-medium">{product.name}</span>
                     </div>
-                    <div className="text-ice-500 mt-1">R$ {product.price.toFixed(2)}</div>
+                    <div className="text-ice-500 mt-1">
+                      R$ {product.price.toFixed(2)} • Estoque: {product.stock}
+                    </div>
                   </div>
                   <Button 
                     size="sm" 
                     className="bg-ice-100 text-ice-700 hover:bg-ice-200"
                     onClick={() => addToCart(product)}
+                    disabled={product.stock <= 0}
                   >
                     <Plus className="h-4 w-4 mr-1" />
                     Adicionar
@@ -358,59 +335,64 @@ const Sales = () => {
                     </tr>
                   </thead>
                   <tbody>
-                    {filteredSales.map((sale) => (
-                      <tr key={sale.id} className="border-b border-ice-100 hover:bg-ice-50 transition-colors">
-                        <td className="py-3 text-ice-800">{sale.id}</td>
-                        <td className="py-3 text-ice-800">{sale.customer}</td>
-                        <td className="py-3 text-ice-800">
-                          <Dialog>
-                            <DialogTrigger asChild>
-                              <Button variant="link" className="text-snow-600 p-0 h-auto">
-                                Ver {sale.items.length} itens
-                              </Button>
-                            </DialogTrigger>
-                            <DialogContent>
-                              <DialogHeader>
-                                <DialogTitle>Detalhes da Venda #{sale.id}</DialogTitle>
-                                <DialogDescription>
-                                  Cliente: {sale.customer} | Data: {sale.date}
-                                </DialogDescription>
-                              </DialogHeader>
-                              <div className="mt-4">
-                                <table className="w-full">
-                                  <thead className="bg-ice-50">
-                                    <tr className="text-left">
-                                      <th className="px-4 py-2 text-ice-500 font-medium">Item</th>
-                                      <th className="px-4 py-2 text-ice-500 font-medium">Preço</th>
-                                      <th className="px-4 py-2 text-ice-500 font-medium">Qtd</th>
-                                      <th className="px-4 py-2 text-ice-500 font-medium">Subtotal</th>
-                                    </tr>
-                                  </thead>
-                                  <tbody>
-                                    {sale.items.map((item, index) => (
-                                      <tr key={index} className="border-t border-ice-100">
-                                        <td className="px-4 py-2">{item.name}</td>
-                                        <td className="px-4 py-2">R$ {item.price.toFixed(2)}</td>
-                                        <td className="px-4 py-2">{item.quantity}</td>
-                                        <td className="px-4 py-2">R$ {(item.price * item.quantity).toFixed(2)}</td>
+                    {filteredSales.map((sale) => {
+                      const items = saleItems[sale.id] || [];
+                      const customer = customers.find(c => c.id === sale.customer);
+                      
+                      return (
+                        <tr key={sale.id} className="border-b border-ice-100 hover:bg-ice-50 transition-colors">
+                          <td className="py-3 text-ice-800">{sale.id.substring(0, 8)}</td>
+                          <td className="py-3 text-ice-800">{customer?.name || 'Cliente desconhecido'}</td>
+                          <td className="py-3 text-ice-800">
+                            <Dialog>
+                              <DialogTrigger asChild>
+                                <Button variant="link" className="text-snow-600 p-0 h-auto">
+                                  Ver {items.length} itens
+                                </Button>
+                              </DialogTrigger>
+                              <DialogContent>
+                                <DialogHeader>
+                                  <DialogTitle>Detalhes da Venda #{sale.id.substring(0, 8)}</DialogTitle>
+                                  <DialogDescription>
+                                    Cliente: {customer?.name || 'Cliente desconhecido'} | Data: {sale.date}
+                                  </DialogDescription>
+                                </DialogHeader>
+                                <div className="mt-4">
+                                  <table className="w-full">
+                                    <thead className="bg-ice-50">
+                                      <tr className="text-left">
+                                        <th className="px-4 py-2 text-ice-500 font-medium">Item</th>
+                                        <th className="px-4 py-2 text-ice-500 font-medium">Preço</th>
+                                        <th className="px-4 py-2 text-ice-500 font-medium">Qtd</th>
+                                        <th className="px-4 py-2 text-ice-500 font-medium">Subtotal</th>
                                       </tr>
-                                    ))}
-                                  </tbody>
-                                  <tfoot className="bg-ice-50">
-                                    <tr>
-                                      <td colSpan={3} className="px-4 py-2 text-right font-medium">Total:</td>
-                                      <td className="px-4 py-2 font-bold text-ice-900">R$ {sale.total.toFixed(2)}</td>
-                                    </tr>
-                                  </tfoot>
-                                </table>
-                              </div>
-                            </DialogContent>
-                          </Dialog>
-                        </td>
-                        <td className="py-3 text-ice-800">R$ {sale.total.toFixed(2)}</td>
-                        <td className="py-3 text-ice-500">{sale.date}</td>
-                      </tr>
-                    ))}
+                                    </thead>
+                                    <tbody>
+                                      {items.map((item) => (
+                                        <tr key={item.id} className="border-t border-ice-100">
+                                          <td className="px-4 py-2">{item.product_name}</td>
+                                          <td className="px-4 py-2">R$ {item.price.toFixed(2)}</td>
+                                          <td className="px-4 py-2">{item.quantity}</td>
+                                          <td className="px-4 py-2">R$ {(item.price * item.quantity).toFixed(2)}</td>
+                                        </tr>
+                                      ))}
+                                    </tbody>
+                                    <tfoot className="bg-ice-50">
+                                      <tr>
+                                        <td colSpan={3} className="px-4 py-2 text-right font-medium">Total:</td>
+                                        <td className="px-4 py-2 font-bold text-ice-900">R$ {sale.total.toFixed(2)}</td>
+                                      </tr>
+                                    </tfoot>
+                                  </table>
+                                </div>
+                              </DialogContent>
+                            </Dialog>
+                          </td>
+                          <td className="py-3 text-ice-800">R$ {sale.total.toFixed(2)}</td>
+                          <td className="py-3 text-ice-500">{sale.date}</td>
+                        </tr>
+                      );
+                    })}
                     
                     {filteredSales.length === 0 && (
                       <tr>

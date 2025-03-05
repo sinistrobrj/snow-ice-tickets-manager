@@ -13,7 +13,16 @@ import ProductsPage from "./pages/ProductsPage";
 import SalesPage from "./pages/SalesPage";
 import NotFound from "./pages/NotFound";
 
-const queryClient = new QueryClient();
+// Criamos o queryClient para gerenciar estados da aplicação
+const queryClient = new QueryClient({
+  defaultOptions: {
+    queries: {
+      refetchOnWindowFocus: false,
+      retry: 1,
+      staleTime: 30000,
+    },
+  },
+});
 
 const App = () => (
   <QueryClientProvider client={queryClient}>

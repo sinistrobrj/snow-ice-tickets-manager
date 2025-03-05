@@ -14,35 +14,16 @@ import {
   DialogTrigger,
   DialogDescription 
 } from "@/components/ui/dialog";
-import { Plus, Search, Edit, Trash2, Package, Ticket } from "lucide-react";
+import { Plus, Search, Edit, Trash2, Package, Ticket, Loader2 } from "lucide-react";
 import { toast } from "sonner";
-
-// Modelos de dados
-interface Product {
-  id: number;
-  name: string;
-  description: string;
-  price: number;
-  stock: number;
-  category: "produto" | "ingresso";
-}
-
-// Dados iniciais
-const initialProducts: Product[] = [
-  { id: 1, name: "Chocolate Quente", description: "Bebida quente com chocolate e marshmallow", price: 15, stock: 100, category: "produto" },
-  { id: 2, name: "Luvas de Patinação", description: "Luvas térmicas para patinação", price: 45, stock: 30, category: "produto" },
-  { id: 3, name: "Cachecol Snow on Ice", description: "Cachecol oficial do evento", price: 35, stock: 50, category: "produto" },
-  { id: 4, name: "Ingresso Adulto", description: "Entrada para adultos", price: 90, stock: 200, category: "ingresso" },
-  { id: 5, name: "Ingresso Criança", description: "Entrada para crianças", price: 45, stock: 200, category: "ingresso" },
-  { id: 6, name: "Ingresso Estudante", description: "Entrada para estudantes", price: 60, stock: 200, category: "ingresso" },
-  { id: 7, name: "Ingresso Idoso", description: "Entrada para idosos", price: 60, stock: 200, category: "ingresso" },
-];
+import { useProducts } from "@/hooks/useProducts";
+import { Product } from "@/types/database.types";
 
 const Products = () => {
-  const [products, setProducts] = useState<Product[]>(initialProducts);
+  const { products, loading, addProduct, updateProduct, deleteProduct } = useProducts();
   const [searchTerm, setSearchTerm] = useState("");
   const [editingProduct, setEditingProduct] = useState<Product | null>(null);
-  const [newProduct, setNewProduct] = useState<Omit<Product, "id">>({
+  const [newProduct, setNewProduct] = useState<Omit<Product, "id" | "created_at">>({
     name: "",
     description: "",
     price: 0,
@@ -64,44 +45,47 @@ const Products = () => {
   });
 
   // Adicionar novo produto
-  const handleAddProduct = () => {
+  const handleAddProduct = async () => {
     if (newProduct.name && newProduct.price > 0) {
-      const product: Product = {
-        ...newProduct,
-        id: products.length > 0 ? Math.max(...products.map(p => p.id)) + 1 : 1
-      };
+      const added = await addProduct(newProduct);
       
-      setProducts([...products, product]);
-      setNewProduct({
-        name: "",
-        description: "",
-        price: 0,
-        stock: 0,
-        category: "produto"
-      });
-      
-      toast.success("Produto adicionado com sucesso!");
+      if (added) {
+        setNewProduct({
+          name: "",
+          description: "",
+          price: 0,
+          stock: 0,
+          category: "produto"
+        });
+      }
     } else {
       toast.error("Por favor, preencha todos os campos obrigatórios.");
     }
   };
 
   // Salvar produto editado
-  const handleSaveEdit = () => {
+  const handleSaveEdit = async () => {
     if (editingProduct && editingProduct.name && editingProduct.price > 0) {
-      setProducts(products.map(p => p.id === editingProduct.id ? editingProduct : p));
+      await updateProduct(editingProduct.id, editingProduct);
       setEditingProduct(null);
-      toast.success("Produto atualizado com sucesso!");
     } else {
       toast.error("Por favor, preencha todos os campos obrigatórios.");
     }
   };
 
   // Deletar produto
-  const handleDeleteProduct = (id: number) => {
-    setProducts(products.filter(p => p.id !== id));
-    toast.success("Produto removido com sucesso!");
+  const handleDeleteProduct = async (id: string) => {
+    await deleteProduct(id);
   };
+
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center h-96">
+        <Loader2 className="h-8 w-8 animate-spin text-snow-600" />
+        <span className="ml-2 text-ice-600">Carregando produtos...</span>
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-8 animate-slide-up">

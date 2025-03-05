@@ -1,5 +1,5 @@
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -12,8 +12,10 @@ import {
   DialogFooter,
   DialogTrigger 
 } from "@/components/ui/dialog";
-import { Plus, Search, Filter, Trash2 } from "lucide-react";
+import { Plus, Search, Trash2, Loader2 } from "lucide-react";
 import { toast } from "sonner";
+import { useTicketSales } from "@/hooks/useTicketSales";
+import { useCustomers } from "@/hooks/useCustomers";
 
 const ticketTypes = [
   { id: 1, name: "Adulto", price: 90 },
@@ -28,27 +30,9 @@ const events = [
   { id: 3, name: "Competição Regional", date: "12/07/2023" },
 ];
 
-interface SaleItem {
-  id: number;
-  customer: string;
-  event: string;
-  eventDate: string;
-  tickets: number;
-  ticketType: string;
-  total: number;
-  date: string;
-}
-
-const initialSales: SaleItem[] = [
-  { id: 1, customer: "Maria Silva", event: "Festival de Inverno", eventDate: "30/06/2023", tickets: 2, ticketType: "Adulto", total: 180, date: "24/06/2023" },
-  { id: 2, customer: "João Oliveira", event: "Festival de Inverno", eventDate: "30/06/2023", tickets: 4, ticketType: "Adulto", total: 360, date: "23/06/2023" },
-  { id: 3, customer: "Ana Santos", event: "Apresentação de Patinação", eventDate: "05/07/2023", tickets: 1, ticketType: "Estudante", total: 60, date: "23/06/2023" },
-  { id: 4, customer: "Pedro Costa", event: "Competição Regional", eventDate: "12/07/2023", tickets: 3, ticketType: "Adulto", total: 270, date: "22/06/2023" },
-  { id: 5, customer: "Carla Ferreira", event: "Apresentação de Patinação", eventDate: "05/07/2023", tickets: 2, ticketType: "Criança", total: 90, date: "22/06/2023" },
-];
-
 const TicketSales = () => {
-  const [sales, setSales] = useState<SaleItem[]>(initialSales);
+  const { ticketSales: sales, loading, addTicketSale, deleteTicketSale } = useTicketSales();
+  const { customers, loading: loadingCustomers } = useCustomers();
   const [searchTerm, setSearchTerm] = useState("");
   const [newSale, setNewSale] = useState({
     customer: "",
@@ -57,45 +41,59 @@ const TicketSales = () => {
     tickets: 1,
   });
   
-  const handleAddSale = () => {
+  const handleAddSale = async () => {
     const selectedEvent = events.find(e => e.name === newSale.event);
     const selectedTicketType = ticketTypes.find(t => t.name === newSale.ticketType);
     
     if (newSale.customer && newSale.event && newSale.ticketType && newSale.tickets > 0 && selectedEvent && selectedTicketType) {
-      const sale: SaleItem = {
-        id: sales.length + 1,
+      const ticketSale = {
         customer: newSale.customer,
         event: newSale.event,
-        eventDate: selectedEvent.date,
+        event_date: new Date(selectedEvent.date.split('/').reverse().join('-')).toISOString(),
         tickets: newSale.tickets,
-        ticketType: newSale.ticketType,
+        ticket_type: newSale.ticketType,
         total: selectedTicketType.price * newSale.tickets,
-        date: new Date().toLocaleDateString('pt-BR'),
+        date: new Date().toISOString()
       };
       
-      setSales([sale, ...sales]);
-      setNewSale({
-        customer: "",
-        event: "",
-        ticketType: "",
-        tickets: 1,
-      });
+      const result = await addTicketSale(ticketSale);
       
-      toast.success("Venda registrada com sucesso!");
+      if (result) {
+        setNewSale({
+          customer: "",
+          event: "",
+          ticketType: "",
+          tickets: 1,
+        });
+        
+        toast.success("Venda registrada com sucesso!");
+      }
     } else {
       toast.error("Por favor, preencha todos os campos corretamente.");
     }
   };
   
-  const handleDeleteSale = (id: number) => {
-    setSales(sales.filter(sale => sale.id !== id));
-    toast.success("Venda removida com sucesso!");
+  const handleDeleteSale = async (id: string) => {
+    const success = await deleteTicketSale(id);
+    if (success) {
+      toast.success("Venda removida com sucesso!");
+    }
   };
   
-  const filteredSales = sales.filter(sale => 
-    sale.customer.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    sale.event.toLowerCase().includes(searchTerm.toLowerCase())
-  );
+  const filteredSales = sales.filter(sale => {
+    const customer = customers.find(c => c.id === sale.customer);
+    return customer?.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+           sale.event.toLowerCase().includes(searchTerm.toLowerCase());
+  });
+
+  if (loading || loadingCustomers) {
+    return (
+      <div className="flex items-center justify-center h-96">
+        <Loader2 className="h-8 w-8 animate-spin text-snow-600" />
+        <span className="ml-2 text-ice-600">Carregando dados...</span>
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-8 animate-slide-up">
@@ -131,12 +129,17 @@ const TicketSales = () => {
                 <Label htmlFor="customer" className="text-right">
                   Cliente
                 </Label>
-                <Input
+                <select
                   id="customer"
                   value={newSale.customer}
                   onChange={(e) => setNewSale({...newSale, customer: e.target.value})}
-                  className="col-span-3"
-                />
+                  className="col-span-3 flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
+                >
+                  <option value="">Selecione um cliente</option>
+                  {customers.map(customer => (
+                    <option key={customer.id} value={customer.id}>{customer.name}</option>
+                  ))}
+                </select>
               </div>
               <div className="grid grid-cols-4 items-center gap-4">
                 <Label htmlFor="event" className="text-right">
@@ -207,27 +210,41 @@ const TicketSales = () => {
               </tr>
             </thead>
             <tbody>
-              {filteredSales.map((sale) => (
-                <tr key={sale.id} className="border-b border-ice-100 hover:bg-ice-50 transition-colors">
-                  <td className="py-3 text-ice-800">{sale.customer}</td>
-                  <td className="py-3 text-ice-800">{sale.event}</td>
-                  <td className="py-3 text-ice-800">{sale.eventDate}</td>
-                  <td className="py-3 text-ice-800">{sale.ticketType}</td>
-                  <td className="py-3 text-ice-800">{sale.tickets}</td>
-                  <td className="py-3 text-ice-800">R$ {sale.total.toFixed(2)}</td>
-                  <td className="py-3 text-ice-500">{sale.date}</td>
-                  <td className="py-3 text-ice-500">
-                    <Button 
-                      variant="ghost" 
-                      size="icon" 
-                      className="h-8 w-8 text-red-500 hover:text-red-700 hover:bg-red-50"
-                      onClick={() => handleDeleteSale(sale.id)}
-                    >
-                      <Trash2 className="h-4 w-4" />
-                    </Button>
+              {filteredSales.map((sale) => {
+                const customer = customers.find(c => c.id === sale.customer);
+                const eventDate = new Date(sale.event_date).toLocaleDateString('pt-BR');
+                const saleDate = new Date(sale.date).toLocaleDateString('pt-BR');
+                
+                return (
+                  <tr key={sale.id} className="border-b border-ice-100 hover:bg-ice-50 transition-colors">
+                    <td className="py-3 text-ice-800">{customer ? customer.name : 'Cliente desconhecido'}</td>
+                    <td className="py-3 text-ice-800">{sale.event}</td>
+                    <td className="py-3 text-ice-800">{eventDate}</td>
+                    <td className="py-3 text-ice-800">{sale.ticket_type}</td>
+                    <td className="py-3 text-ice-800">{sale.tickets}</td>
+                    <td className="py-3 text-ice-800">R$ {sale.total.toFixed(2)}</td>
+                    <td className="py-3 text-ice-500">{saleDate}</td>
+                    <td className="py-3 text-ice-500">
+                      <Button 
+                        variant="ghost" 
+                        size="icon" 
+                        className="h-8 w-8 text-red-500 hover:text-red-700 hover:bg-red-50"
+                        onClick={() => handleDeleteSale(sale.id)}
+                      >
+                        <Trash2 className="h-4 w-4" />
+                      </Button>
+                    </td>
+                  </tr>
+                );
+              })}
+              
+              {filteredSales.length === 0 && (
+                <tr>
+                  <td colSpan={8} className="py-6 text-center text-ice-500">
+                    Nenhuma venda de ingresso encontrada.
                   </td>
                 </tr>
-              ))}
+              )}
             </tbody>
           </table>
         </div>

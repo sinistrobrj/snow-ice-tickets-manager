@@ -9,7 +9,190 @@ export type Json =
 export type Database = {
   public: {
     Tables: {
-      [_ in never]: never
+      customers: {
+        Row: {
+          created_at: string
+          email: string
+          id: string
+          last_purchase: string | null
+          name: string
+          phone: string
+          registration_date: string
+          tickets: number
+        }
+        Insert: {
+          created_at?: string
+          email: string
+          id?: string
+          last_purchase?: string | null
+          name: string
+          phone: string
+          registration_date?: string
+          tickets?: number
+        }
+        Update: {
+          created_at?: string
+          email?: string
+          id?: string
+          last_purchase?: string | null
+          name?: string
+          phone?: string
+          registration_date?: string
+          tickets?: number
+        }
+        Relationships: []
+      }
+      products: {
+        Row: {
+          category: string
+          created_at: string
+          description: string
+          id: string
+          name: string
+          price: number
+          stock: number
+        }
+        Insert: {
+          category: string
+          created_at?: string
+          description: string
+          id?: string
+          name: string
+          price: number
+          stock?: number
+        }
+        Update: {
+          category?: string
+          created_at?: string
+          description?: string
+          id?: string
+          name?: string
+          price?: number
+          stock?: number
+        }
+        Relationships: []
+      }
+      sale_items: {
+        Row: {
+          category: string
+          id: string
+          price: number
+          product_id: string
+          product_name: string
+          quantity: number
+          sale_id: string
+        }
+        Insert: {
+          category: string
+          id?: string
+          price: number
+          product_id: string
+          product_name: string
+          quantity: number
+          sale_id: string
+        }
+        Update: {
+          category?: string
+          id?: string
+          price?: number
+          product_id?: string
+          product_name?: string
+          quantity?: number
+          sale_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "sale_items_product_id_fkey"
+            columns: ["product_id"]
+            isOneToOne: false
+            referencedRelation: "products"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "sale_items_sale_id_fkey"
+            columns: ["sale_id"]
+            isOneToOne: false
+            referencedRelation: "sales"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      sales: {
+        Row: {
+          created_at: string
+          customer: string
+          date: string
+          id: string
+          total: number
+        }
+        Insert: {
+          created_at?: string
+          customer: string
+          date?: string
+          id?: string
+          total: number
+        }
+        Update: {
+          created_at?: string
+          customer?: string
+          date?: string
+          id?: string
+          total?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "sales_customer_fkey"
+            columns: ["customer"]
+            isOneToOne: false
+            referencedRelation: "customers"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      ticket_sales: {
+        Row: {
+          created_at: string
+          customer: string
+          date: string
+          event: string
+          event_date: string
+          id: string
+          ticket_type: string
+          tickets: number
+          total: number
+        }
+        Insert: {
+          created_at?: string
+          customer: string
+          date?: string
+          event: string
+          event_date: string
+          id?: string
+          ticket_type: string
+          tickets: number
+          total: number
+        }
+        Update: {
+          created_at?: string
+          customer?: string
+          date?: string
+          event?: string
+          event_date?: string
+          id?: string
+          ticket_type?: string
+          tickets?: number
+          total?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "ticket_sales_customer_fkey"
+            columns: ["customer"]
+            isOneToOne: false
+            referencedRelation: "customers"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
     }
     Views: {
       [_ in never]: never

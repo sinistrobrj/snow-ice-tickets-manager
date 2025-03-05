@@ -4,15 +4,6 @@ import { supabase } from '@/lib/supabase';
 import { TicketSale } from '@/types/database.types';
 import { toast } from 'sonner';
 
-interface NewTicketSale {
-  customer: string;
-  event: string;
-  eventDate: string;
-  ticketType: string;
-  tickets: number;
-  total: number;
-}
-
 export const useTicketSales = () => {
   const [ticketSales, setTicketSales] = useState<TicketSale[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
@@ -40,19 +31,11 @@ export const useTicketSales = () => {
     }
   };
 
-  const addTicketSale = async (sale: NewTicketSale) => {
+  const addTicketSale = async (ticketSale: Omit<TicketSale, 'id' | 'created_at'>) => {
     try {
       const { data, error } = await supabase
         .from('ticket_sales')
-        .insert([{
-          customer: sale.customer,
-          event: sale.event,
-          event_date: sale.eventDate,
-          ticket_type: sale.ticketType,
-          tickets: sale.tickets,
-          total: sale.total,
-          date: new Date().toLocaleDateString('pt-BR')
-        }])
+        .insert([ticketSale])
         .select();
 
       if (error) {
@@ -62,18 +45,18 @@ export const useTicketSales = () => {
       if (data) {
         setTicketSales([data[0], ...ticketSales]);
         
-        // Atualizar o cliente
+        // Atualizar o número de ingressos do cliente
         await supabase
           .from('customers')
           .update({ 
-            last_purchase: new Date().toLocaleDateString('pt-BR'),
-            tickets: supabase.rpc('increment_customer_tickets', { 
-              customer_id: sale.customer,
-              ticket_count: sale.tickets
-            })
+            tickets: supabase.rpc('increment', { 
+              row_id: ticketSale.customer,
+              increment_amount: ticketSale.tickets
+            }),
+            last_purchase: new Date().toISOString()
           })
-          .eq('id', sale.customer);
-
+          .eq('id', ticketSale.customer);
+        
         return data[0];
       }
     } catch (error: any) {
@@ -94,7 +77,7 @@ export const useTicketSales = () => {
         throw error;
       }
 
-      setTicketSales(ticketSales.filter(ts => ts.id !== id));
+      setTicketSales(ticketSales.filter(sale => sale.id !== id));
       return true;
     } catch (error: any) {
       console.error('Erro ao excluir venda de ingresso:', error.message);

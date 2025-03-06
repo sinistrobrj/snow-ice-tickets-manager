@@ -11,6 +11,7 @@ import {
   DialogFooter
 } from "@/components/ui/dialog";
 import { Customer } from "@/types/database.types";
+import { toast } from "sonner";
 
 interface CustomerDialogProps {
   open: boolean;
@@ -29,6 +30,39 @@ const CustomerDialog = ({
   onSave,
   setCurrentCustomer
 }: CustomerDialogProps) => {
+  const [cpfError, setCpfError] = useState<string>("");
+
+  const validateCpf = (cpf: string) => {
+    // Remove any non-numeric characters
+    const numericCpf = cpf.replace(/\D/g, '');
+    
+    if (numericCpf.length !== 11) {
+      return "CPF deve conter exatamente 11 dígitos numéricos";
+    }
+    
+    return "";
+  };
+
+  const handleCpfChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const value = e.target.value;
+    // Allow only numbers
+    const numericValue = value.replace(/\D/g, '');
+    
+    setCurrentCustomer({...currentCustomer, phone: numericValue});
+    setCpfError(validateCpf(numericValue));
+  };
+
+  const handleSave = () => {
+    const error = validateCpf(currentCustomer.phone || "");
+    if (error) {
+      setCpfError(error);
+      toast.error(error);
+      return;
+    }
+    
+    onSave();
+  };
+
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-[500px]">
@@ -60,19 +94,24 @@ const CustomerDialog = ({
             />
           </div>
           <div className="grid grid-cols-4 items-center gap-4">
-            <Label htmlFor="phone" className="text-right">
-              Telefone
+            <Label htmlFor="cpf" className="text-right">
+              CPF
             </Label>
-            <Input
-              id="phone"
-              value={currentCustomer.phone || ""}
-              onChange={(e) => setCurrentCustomer({...currentCustomer, phone: e.target.value})}
-              className="col-span-3"
-            />
+            <div className="col-span-3">
+              <Input
+                id="cpf"
+                value={currentCustomer.phone || ""}
+                onChange={handleCpfChange}
+                maxLength={11}
+                placeholder="Somente números (11 dígitos)"
+                className={cpfError ? "border-red-500" : ""}
+              />
+              {cpfError && <p className="text-red-500 text-sm mt-1">{cpfError}</p>}
+            </div>
           </div>
         </div>
         <DialogFooter>
-          <Button onClick={onSave}>
+          <Button onClick={handleSave}>
             {isEditing ? "Atualizar" : "Cadastrar"}
           </Button>
         </DialogFooter>

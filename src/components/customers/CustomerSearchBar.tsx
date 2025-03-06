@@ -15,7 +15,7 @@ const CustomerSearchBar = ({ searchTerm, setSearchTerm, onAddNew }: CustomerSear
       <div className="relative max-w-md w-full">
         <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-ice-400" />
         <Input 
-          placeholder="Buscar por nome, email ou telefone..." 
+          placeholder="Buscar por nome, email ou CPF..." 
           className="pl-10" 
           value={searchTerm}
           onChange={(e) => setSearchTerm(e.target.value)}

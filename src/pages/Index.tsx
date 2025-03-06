@@ -1,9 +1,53 @@
 
+import { useState } from "react";
+import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
-import { Link } from "react-router-dom";
-import { Snowflake, BarChart3, Users, Ticket } from "lucide-react";
+import { Input } from "@/components/ui/input";
+import { Card } from "@/components/ui/card";
+import { Snowflake } from "lucide-react";
+import { toast } from "sonner";
+import { useAuth } from "@/hooks/useAuth";
 
 const Index = () => {
+  const [username, setUsername] = useState("");
+  const [password, setPassword] = useState("");
+  const [isLoading, setIsLoading] = useState(false);
+  const navigate = useNavigate();
+  const { login, user } = useAuth();
+
+  // If already logged in, redirect to dashboard
+  if (user) {
+    navigate("/dashboard");
+    return null;
+  }
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    
+    if (!username.trim() || !password.trim()) {
+      toast.error("Por favor, preencha todos os campos");
+      return;
+    }
+    
+    setIsLoading(true);
+    
+    try {
+      const success = await login(username, password);
+      
+      if (success) {
+        toast.success("Login realizado com sucesso!");
+        navigate("/dashboard");
+      } else {
+        toast.error("Nome de usuário ou senha incorretos");
+      }
+    } catch (error) {
+      console.error("Erro ao fazer login:", error);
+      toast.error("Ocorreu um erro ao fazer login. Tente novamente.");
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
   return (
     <div className="min-h-screen flex flex-col bg-gradient-to-br from-ice-50 to-snow-50">
       <header className="bg-white/80 backdrop-blur-sm border-b border-ice-200 shadow-sm">
@@ -13,71 +57,67 @@ const Index = () => {
               <Snowflake className="h-6 w-6 text-snow-600" />
               <span>Snow on Ice</span>
             </div>
-            <nav className="hidden md:flex items-center gap-6">
-              <Link to="/" className="nav-link text-ice-600 font-medium">Início</Link>
-              <Link to="/dashboard" className="nav-link text-ice-600 font-medium">Sistema</Link>
-            </nav>
           </div>
         </div>
       </header>
 
-      <main className="flex-1">
-        <section className="py-16 md:py-24">
-          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
-            <h1 className="text-4xl md:text-5xl lg:text-6xl font-bold text-ice-900 tracking-tight animate-slide-down">
-              Sistema de Gerenciamento
-            </h1>
-            <p className="mt-6 text-xl text-ice-600 max-w-3xl mx-auto animate-slide-down" style={{ animationDelay: "200ms" }}>
-              Controle completo para vendas de ingressos, cadastro de clientes, e relatórios detalhados para sua empresa.
-            </p>
-            <div className="mt-10 flex flex-col sm:flex-row gap-4 justify-center animate-slide-down" style={{ animationDelay: "400ms" }}>
-              <Link to="/dashboard">
-                <Button className="w-full sm:w-auto bg-snow-600 hover:bg-snow-700 text-lg px-8 py-6">
-                  Acessar Sistema
-                </Button>
-              </Link>
-            </div>
+      <main className="flex-1 flex items-center justify-center p-4">
+        <Card className="glass-card max-w-md w-full p-8 animate-fade-in">
+          <div className="flex flex-col items-center mb-8">
+            <h1 className="text-2xl font-semibold text-ice-900">Login do Sistema</h1>
+            <p className="text-ice-600 mt-1">Entre com suas credenciais para acessar</p>
           </div>
-        </section>
+          
+          <form onSubmit={handleSubmit} className="space-y-4">
+            <div className="space-y-2">
+              <label htmlFor="username" className="text-sm font-medium text-ice-700">
+                Nome de Usuário
+              </label>
+              <Input
+                id="username"
+                type="text"
+                value={username}
+                onChange={(e) => setUsername(e.target.value)}
+                placeholder="Digite seu nome de usuário"
+                autoComplete="username"
+                disabled={isLoading}
+              />
+            </div>
+            
+            <div className="space-y-2">
+              <label htmlFor="password" className="text-sm font-medium text-ice-700">
+                Senha
+              </label>
+              <Input
+                id="password"
+                type="password"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                placeholder="Digite sua senha"
+                autoComplete="current-password"
+                disabled={isLoading}
+              />
+            </div>
+            
+            <Button
+              type="submit"
+              className="w-full bg-snow-600 hover:bg-snow-700"
+              disabled={isLoading}
+            >
+              {isLoading ? "Entrando..." : "Entrar"}
+            </Button>
 
-        <section className="py-16 bg-white/70 backdrop-blur-sm border-t border-b border-ice-200">
-          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            <h2 className="text-3xl font-bold text-ice-900 text-center mb-12">Principais Funcionalidades</h2>
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-              <div className="glass-card hover-card p-6 rounded-xl flex flex-col items-center text-center">
-                <div className="p-4 bg-snow-100 rounded-lg text-snow-600 mb-4">
-                  <Ticket className="h-8 w-8" />
-                </div>
-                <h3 className="text-xl font-semibold text-ice-900 mb-2">Vendas de Ingressos</h3>
-                <p className="text-ice-600">Gerencie todas as vendas de ingressos para seus eventos com facilidade e eficiência.</p>
-              </div>
-              
-              <div className="glass-card hover-card p-6 rounded-xl flex flex-col items-center text-center">
-                <div className="p-4 bg-snow-100 rounded-lg text-snow-600 mb-4">
-                  <Users className="h-8 w-8" />
-                </div>
-                <h3 className="text-xl font-semibold text-ice-900 mb-2">Cadastro de Clientes</h3>
-                <p className="text-ice-600">Mantenha um registro completo dos seus clientes e todo o histórico de compras.</p>
-              </div>
-              
-              <div className="glass-card hover-card p-6 rounded-xl flex flex-col items-center text-center">
-                <div className="p-4 bg-snow-100 rounded-lg text-snow-600 mb-4">
-                  <BarChart3 className="h-8 w-8" />
-                </div>
-                <h3 className="text-xl font-semibold text-ice-900 mb-2">Relatórios Detalhados</h3>
-                <p className="text-ice-600">Visualize estatísticas e relatórios por dia, semana e mês para tomar decisões informadas.</p>
-              </div>
+            <div className="text-center text-sm text-ice-600 mt-2">
+              <p>Credenciais padrão:</p>
+              <p>Usuário: Administrador</p>
+              <p>Senha: 101010</p>
             </div>
-          </div>
-        </section>
+          </form>
+        </Card>
       </main>
 
-      <footer className="bg-white/80 backdrop-blur-sm border-t border-ice-200 py-12">
+      <footer className="bg-white/80 backdrop-blur-sm border-t border-ice-200 py-6">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
-          <div className="flex items-center justify-center gap-2 text-snow-800 font-semibold text-xl mb-4">
-            <Snowflake className="h-6 w-6 text-snow-600" />
-            <span>Snow on Ice</span>
-          </div>
           <p className="text-ice-500">© 2023 Snow on Ice. Todos os direitos reservados.</p>
         </div>
       </footer>

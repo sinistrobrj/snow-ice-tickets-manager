@@ -10,41 +10,35 @@ import {
 const statCards = [
   {
     title: "Ingressos Vendidos",
-    value: "124",
-    change: "+12%",
+    value: "0",
+    change: "+0%",
     changeType: "increase",
     icon: <TicketCheck className="h-8 w-8 text-snow-500" />,
   },
   {
     title: "Clientes Ativos",
-    value: "84",
-    change: "+7%",
+    value: "0",
+    change: "+0%",
     changeType: "increase",
     icon: <Users className="h-8 w-8 text-snow-500" />,
   },
   {
     title: "Receita Total",
-    value: "R$ 24.580",
-    change: "+18%",
+    value: "R$ 0",
+    change: "+0%",
     changeType: "increase",
     icon: <CreditCard className="h-8 w-8 text-snow-500" />,
   },
   {
     title: "Taxa de Crescimento",
-    value: "8.9%",
-    change: "+2.4%",
+    value: "0%",
+    change: "+0%",
     changeType: "increase",
     icon: <TrendingUp className="h-8 w-8 text-snow-500" />,
   },
 ];
 
-const recentTransactions = [
-  { id: 1, customer: "Maria Silva", tickets: 2, total: "R$ 180,00", date: "24/06/2023" },
-  { id: 2, customer: "João Oliveira", tickets: 4, total: "R$ 360,00", date: "23/06/2023" },
-  { id: 3, customer: "Ana Santos", tickets: 1, total: "R$ 90,00", date: "23/06/2023" },
-  { id: 4, customer: "Pedro Costa", tickets: 3, total: "R$ 270,00", date: "22/06/2023" },
-  { id: 5, customer: "Carla Ferreira", tickets: 2, total: "R$ 180,00", date: "22/06/2023" },
-];
+const recentTransactions = [];
 
 const Dashboard = () => {
   return (
@@ -88,14 +82,22 @@ const Dashboard = () => {
                 </tr>
               </thead>
               <tbody>
-                {recentTransactions.map((transaction) => (
-                  <tr key={transaction.id} className="border-b border-ice-100 hover:bg-ice-50 transition-colors">
-                    <td className="py-3 text-ice-800">{transaction.customer}</td>
-                    <td className="py-3 text-ice-800">{transaction.tickets}</td>
-                    <td className="py-3 text-ice-800">{transaction.total}</td>
-                    <td className="py-3 text-ice-500">{transaction.date}</td>
+                {recentTransactions.length > 0 ? (
+                  recentTransactions.map((transaction) => (
+                    <tr key={transaction.id} className="border-b border-ice-100 hover:bg-ice-50 transition-colors">
+                      <td className="py-3 text-ice-800">{transaction.customer}</td>
+                      <td className="py-3 text-ice-800">{transaction.tickets}</td>
+                      <td className="py-3 text-ice-800">{transaction.total}</td>
+                      <td className="py-3 text-ice-500">{transaction.date}</td>
+                    </tr>
+                  ))
+                ) : (
+                  <tr>
+                    <td colSpan={4} className="py-6 text-center text-ice-500">
+                      Nenhuma venda registrada ainda.
+                    </td>
                   </tr>
-                ))}
+                )}
               </tbody>
             </table>
           </div>
@@ -106,15 +108,7 @@ const Dashboard = () => {
           <div className="space-y-4">
             <div className="p-3 border border-ice-100 rounded-lg hover:border-snow-300 transition-colors cursor-pointer">
               <p className="text-ice-800 font-medium">Festival de Inverno</p>
-              <p className="text-ice-500 text-sm">30/06/2023 • 200 ingressos</p>
-            </div>
-            <div className="p-3 border border-ice-100 rounded-lg hover:border-snow-300 transition-colors cursor-pointer">
-              <p className="text-ice-800 font-medium">Apresentação de Patinação</p>
-              <p className="text-ice-500 text-sm">05/07/2023 • 150 ingressos</p>
-            </div>
-            <div className="p-3 border border-ice-100 rounded-lg hover:border-snow-300 transition-colors cursor-pointer">
-              <p className="text-ice-800 font-medium">Competição Regional</p>
-              <p className="text-ice-500 text-sm">12/07/2023 • 100 ingressos</p>
+              <p className="text-ice-500 text-sm">Aguardando agendamento</p>
             </div>
           </div>
         </Card>

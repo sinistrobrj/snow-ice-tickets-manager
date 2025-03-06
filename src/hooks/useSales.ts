@@ -1,7 +1,7 @@
 
 import { useState, useEffect } from 'react';
 import { supabase } from '@/lib/supabase';
-import { Sale, SaleItem, Product } from '@/types/database.types';
+import { Sale, SaleItem, Product, Customer } from '@/types/database.types';
 import { toast } from 'sonner';
 
 interface CartItem extends Product {
@@ -119,18 +119,33 @@ export const useSales = () => {
       // Executar todas as operações
       await Promise.all([...saleItemsPromises, ...productUpdatesPromises]);
 
-      // 4. Atualizar o último cliente que comprou
+      // 4. Atualizar o último cliente que comprou e incrementar ingressos
       if (newSale.customer) {
+        // Contar quantos ingressos foram comprados
+        const ticketCount = newSale.items
+          .filter(item => item.category === 'ingresso')
+          .reduce((sum, item) => sum + item.quantity, 0);
+        
+        if (ticketCount > 0) {
+          // Chamar a função de incremento no banco de dados
+          const { data: incrementData, error: incrementError } = await supabase
+            .rpc('increment', {
+              row_id: newSale.customer,
+              increment_amount: ticketCount
+            });
+            
+          if (incrementError) {
+            console.error('Erro ao incrementar ingressos:', incrementError);
+          } else {
+            console.log('Ingressos incrementados:', incrementData);
+          }
+        }
+        
+        // Atualizar a data da última compra
         await supabase
           .from('customers')
           .update({ 
-            last_purchase: new Date().toLocaleDateString('pt-BR'),
-            tickets: supabase.rpc('increment_customer_tickets', { 
-              customer_id: newSale.customer,
-              ticket_count: newSale.items
-                .filter(item => item.category === 'ingresso')
-                .reduce((sum, item) => sum + item.quantity, 0)
-            })
+            last_purchase: new Date().toISOString()
           })
           .eq('id', newSale.customer);
       }
@@ -161,6 +176,7 @@ export const useSales = () => {
         [saleId]: newItems
       }));
 
+      toast.success('Venda registrada com sucesso!');
       return saleData[0];
     } catch (error: any) {
       console.error('Erro ao adicionar venda:', error.message);

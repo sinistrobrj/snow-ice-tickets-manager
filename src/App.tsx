@@ -13,6 +13,7 @@ import CustomersPage from "./pages/CustomersPage";
 import ReportsPage from "./pages/ReportsPage";
 import ProductsPage from "./pages/ProductsPage";
 import SalesPage from "./pages/SalesPage";
+import RinkManagerPage from "./pages/RinkManagerPage";
 import NotFound from "./pages/NotFound";
 
 // Criamos o queryClient para gerenciar estados da aplicação
@@ -63,6 +64,11 @@ const App = () => (
             <Route path="/sales" element={
               <RequireAuth requiredPermission="sales">
                 <SalesPage />
+              </RequireAuth>
+            } />
+            <Route path="/rink-manager" element={
+              <RequireAuth requiredPermission="rinkManager">
+                <RinkManagerPage />
               </RequireAuth>
             } />
             <Route path="*" element={<NotFound />} />

@@ -9,7 +9,8 @@ import {
   LogOut, 
   Snowflake,
   ShoppingCart,
-  Package
+  Package,
+  Skating
 } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
 
@@ -35,6 +36,12 @@ const Sidebar = () => {
       path: "/ticket-sales",
       icon: <Ticket className="h-5 w-5" />,
       permission: "ticketSales" as const,
+    },
+    {
+      name: "Gerenciador de Pista",
+      path: "/rink-manager",
+      icon: <Skating className="h-5 w-5" />,
+      permission: "rinkManager" as const,
     },
     {
       name: "Produtos e Estoque",

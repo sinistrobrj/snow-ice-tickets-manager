@@ -1,4 +1,3 @@
-
 import { createContext, useContext, useState, useEffect, ReactNode } from 'react';
 import { supabase } from '@/lib/supabase';
 import { toast } from 'sonner';
@@ -20,7 +19,7 @@ interface AuthContextType {
   createUser: (username: string, password: string, role: string) => Promise<boolean>;
   deleteUser: (userId: string) => Promise<boolean>;
   getUsers: () => { id: string; username: string; role: string }[];
-  hasPermission: (permission: "dashboard" | "reports" | "sales" | "customers" | "products" | "ticketSales") => boolean;
+  hasPermission: (permission: "dashboard" | "reports" | "sales" | "customers" | "products" | "ticketSales" | "rinkManager") => boolean;
 }
 
 // Create the AuthContext with a default value
@@ -40,9 +39,9 @@ const USERS_STORAGE_KEY = 'snow_on_ice_users';
 
 // Permission mapping
 const ROLE_PERMISSIONS: Record<string, string[]> = {
-  "admin": ["dashboard", "reports", "sales", "customers", "products", "ticketSales"],
+  "admin": ["dashboard", "reports", "sales", "customers", "products", "ticketSales", "rinkManager"],
   "user": ["sales", "customers", "products", "ticketSales"],
-  "funcionario": ["sales", "customers", "products", "ticketSales"],
+  "funcionario": ["sales", "customers", "products", "ticketSales", "rinkManager"],
   "analise": ["dashboard", "reports"]
 };
 
@@ -191,7 +190,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   };
 
   // Check if user has specific permission
-  const hasPermission = (permission: "dashboard" | "reports" | "sales" | "customers" | "products" | "ticketSales"): boolean => {
+  const hasPermission = (permission: "dashboard" | "reports" | "sales" | "customers" | "products" | "ticketSales" | "rinkManager"): boolean => {
     if (!user) return false;
     
     const userRole = user.role;

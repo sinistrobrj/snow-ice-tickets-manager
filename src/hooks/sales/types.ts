@@ -2,7 +2,7 @@
 import { Product, Customer } from '@/types/database.types';
 import { Sale, SaleItem } from '@/types/database.types';
 
-export { Sale, SaleItem };
+export type { Sale, SaleItem };
 
 export interface CartItem extends Product {
   quantity: number;

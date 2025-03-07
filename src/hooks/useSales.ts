@@ -47,10 +47,13 @@ export const useSales = (): SalesData => {
     
     // If items aren't cached, get them from the sale
     const sale = sales.find(s => s.id === saleId);
-    if (sale && sale.items) {
-      const items = sale.items as unknown as SaleItem[];
-      setSaleItems(prev => ({ ...prev, [saleId]: items }));
-      return items;
+    if (sale) {
+      // Extract items if they exist in the sale object
+      const items = sale as unknown as { items?: SaleItem[] };
+      if (items && items.items) {
+        setSaleItems(prev => ({ ...prev, [saleId]: items.items || [] }));
+        return items.items || [];
+      }
     }
     
     return [];
@@ -61,8 +64,10 @@ export const useSales = (): SalesData => {
     const saleId = `sale-${Date.now()}`;
     const sale: Sale = {
       id: saleId,
-      ...newSale,
-      date: new Date().toISOString(),
+      customer_id: newSale.customer,
+      amount: newSale.total,
+      created_at: new Date().toISOString(),
+      status: 'completed'
     };
     
     const updatedSales = [...sales, sale];

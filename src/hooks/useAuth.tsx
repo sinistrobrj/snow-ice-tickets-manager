@@ -23,6 +23,9 @@ interface AuthContextType {
   hasPermission: (permission: "dashboard" | "reports" | "sales" | "customers" | "products" | "ticketSales") => boolean;
 }
 
+// Create the AuthContext with a default value
+const AuthContext = createContext<AuthContextType>({} as AuthContextType);
+
 // Initial admin user
 const ADMIN_USER = { 
   id: "admin-id", 

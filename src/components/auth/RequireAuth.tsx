@@ -15,30 +15,30 @@ const RequireAuth = ({ children, requiredPermission }: RequireAuthProps) => {
 
   useEffect(() => {
     if (!loading) {
-      // If not authenticated, redirect to login
+      // Se não estiver autenticado, redireciona para login
       if (!user) {
         navigate('/', { replace: true, state: { from: location } });
         return;
       }
       
-      // If permission required but user doesn't have it, redirect to dashboard
+      // Se necessitar permissão específica e o usuário não a tem, redireciona para dashboard
       if (requiredPermission && !hasPermission(requiredPermission)) {
         navigate('/dashboard', { replace: true });
       }
     }
-  }, [user, loading, navigate, location, requiredPermission, hasPermission]);
+  }, [user, loading, location.pathname, requiredPermission]); // Adicionamos location.pathname como dependência e removemos navigate e hasPermission
 
-  // Show nothing while loading or redirect in progress
+  // Não mostra nada enquanto está carregando ou redirecionando
   if (loading || !user) {
     return null;
   }
 
-  // If permission check is required and user doesn't have it, show nothing
+  // Se verificação de permissão é necessária e usuário não a tem, não mostra nada
   if (requiredPermission && !hasPermission(requiredPermission)) {
     return null;
   }
 
-  // Render children if authenticated and has permission
+  // Renderiza os filhos se estiver autenticado e tiver permissão
   return <>{children}</>;
 };
 

@@ -6,6 +6,8 @@ export interface Sale {
   id: string;
   customer: string;
   amount: number;
+  total: number;
+  date: string;
   created_at: string;
   status: string;
 }
@@ -14,8 +16,10 @@ export interface SaleItem {
   id: string;
   sale_id: string;
   product_id: string;
+  product_name: string;
   quantity: number;
   price: number;
+  category: string;
 }
 
 export interface CartItem {
@@ -26,6 +30,7 @@ export interface CartItem {
   image?: string;
   category: string;
   quantity: number;
+  stock: number;
 }
 
 export interface NewSale {

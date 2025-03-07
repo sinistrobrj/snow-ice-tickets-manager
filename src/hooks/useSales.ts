@@ -66,6 +66,8 @@ export const useSales = (): SalesData => {
       id: saleId,
       customer: newSale.customer,
       amount: newSale.total,
+      total: newSale.total, // Added this field
+      date: new Date().toLocaleDateString('pt-BR'), // Added this field
       created_at: new Date().toISOString(),
       status: 'completed'
     };

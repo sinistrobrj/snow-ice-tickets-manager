@@ -1,7 +1,7 @@
 
 import { supabase } from '@/lib/supabase';
 import { Sale, SaleItem } from '@/types/database.types';
-import { NewSale } from './types';
+import { NewSale, CartItem } from './types';
 import { toast } from 'sonner';
 
 export const useSaleOperations = (
@@ -48,7 +48,7 @@ export const useSaleOperations = (
       });
 
       // 3. Atualizar o estoque dos produtos
-      const productUpdatesPromises = newSale.items.map(item => {
+      const productUpdatesPromises = newSale.items.map((item: CartItem) => {
         return supabase
           .from('products')
           .update({ stock: item.stock - item.quantity })

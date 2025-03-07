@@ -36,32 +36,32 @@ const App = () => (
           <Routes>
             <Route path="/" element={<LoginPage />} />
             <Route path="/dashboard" element={
-              <RequireAuth>
+              <RequireAuth requiredPermission="dashboard">
                 <DashboardPage />
               </RequireAuth>
             } />
             <Route path="/ticket-sales" element={
-              <RequireAuth>
+              <RequireAuth requiredPermission="ticketSales">
                 <TicketSalesPage />
               </RequireAuth>
             } />
             <Route path="/customers" element={
-              <RequireAuth>
+              <RequireAuth requiredPermission="customers">
                 <CustomersPage />
               </RequireAuth>
             } />
             <Route path="/reports" element={
-              <RequireAuth>
+              <RequireAuth requiredPermission="reports">
                 <ReportsPage />
               </RequireAuth>
             } />
             <Route path="/products" element={
-              <RequireAuth>
+              <RequireAuth requiredPermission="products">
                 <ProductsPage />
               </RequireAuth>
             } />
             <Route path="/sales" element={
-              <RequireAuth>
+              <RequireAuth requiredPermission="sales">
                 <SalesPage />
               </RequireAuth>
             } />

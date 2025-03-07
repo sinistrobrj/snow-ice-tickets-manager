@@ -11,42 +11,55 @@ import {
   ShoppingCart,
   Package
 } from "lucide-react";
+import { useAuth } from "@/hooks/useAuth";
 
 const Sidebar = () => {
   const location = useLocation();
+  const { hasPermission } = useAuth();
   
   const navigationItems = [
     {
       name: "Dashboard",
       path: "/dashboard",
       icon: <LayoutDashboard className="h-5 w-5" />,
+      permission: "dashboard" as const,
     },
     {
       name: "Ponto de Venda",
       path: "/sales",
       icon: <ShoppingCart className="h-5 w-5" />,
+      permission: "sales" as const,
     },
     {
       name: "Vendas de Ingressos",
       path: "/ticket-sales",
       icon: <Ticket className="h-5 w-5" />,
+      permission: "ticketSales" as const,
     },
     {
       name: "Produtos e Estoque",
       path: "/products",
       icon: <Package className="h-5 w-5" />,
+      permission: "products" as const,
     },
     {
       name: "Clientes",
       path: "/customers",
       icon: <Users className="h-5 w-5" />,
+      permission: "customers" as const,
     },
     {
       name: "Relatórios",
       path: "/reports",
       icon: <BarChart3 className="h-5 w-5" />,
+      permission: "reports" as const,
     },
   ];
+
+  // Filter navigation items based on user permissions
+  const filteredNavItems = navigationItems.filter(item => 
+    hasPermission(item.permission)
+  );
 
   return (
     <aside className="hidden md:flex flex-col w-64 bg-white border-r border-ice-200 shadow-sm z-10">
@@ -62,7 +75,7 @@ const Sidebar = () => {
       
       <nav className="flex-1 px-4 pb-6">
         <ul className="space-y-1">
-          {navigationItems.map((item) => (
+          {filteredNavItems.map((item) => (
             <li key={item.path}>
               <Link
                 to={item.path}

@@ -5,26 +5,40 @@ import { useAuth } from '@/hooks/useAuth';
 
 interface RequireAuthProps {
   children: ReactNode;
+  requiredPermission?: "dashboard" | "reports" | "sales" | "customers" | "products" | "ticketSales";
 }
 
-const RequireAuth = ({ children }: RequireAuthProps) => {
-  const { user, loading } = useAuth();
+const RequireAuth = ({ children, requiredPermission }: RequireAuthProps) => {
+  const { user, loading, hasPermission } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
 
   useEffect(() => {
-    if (!loading && !user) {
-      // Redirect to login page with return URL
-      navigate('/', { replace: true, state: { from: location } });
+    if (!loading) {
+      // If not authenticated, redirect to login
+      if (!user) {
+        navigate('/', { replace: true, state: { from: location } });
+        return;
+      }
+      
+      // If permission required but user doesn't have it, redirect to dashboard
+      if (requiredPermission && !hasPermission(requiredPermission)) {
+        navigate('/dashboard', { replace: true });
+      }
     }
-  }, [user, loading, navigate, location]);
+  }, [user, loading, navigate, location, requiredPermission, hasPermission]);
 
   // Show nothing while loading or redirect in progress
   if (loading || !user) {
     return null;
   }
 
-  // Render children if authenticated
+  // If permission check is required and user doesn't have it, show nothing
+  if (requiredPermission && !hasPermission(requiredPermission)) {
+    return null;
+  }
+
+  // Render children if authenticated and has permission
   return <>{children}</>;
 };
 

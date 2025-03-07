@@ -1,11 +1,11 @@
 
 import { ReactNode, useEffect } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
-import { useAuth } from '@/hooks/useAuth';
+import { useAuth } from '@/hooks/auth';
 
 interface RequireAuthProps {
   children: ReactNode;
-  requiredPermission?: "dashboard" | "reports" | "sales" | "customers" | "products" | "ticketSales";
+  requiredPermission?: "dashboard" | "reports" | "sales" | "customers" | "products" | "ticketSales" | "rinkManager";
 }
 
 const RequireAuth = ({ children, requiredPermission }: RequireAuthProps) => {

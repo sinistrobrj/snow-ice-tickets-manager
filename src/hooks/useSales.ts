@@ -64,7 +64,7 @@ export const useSales = (): SalesData => {
     const saleId = `sale-${Date.now()}`;
     const sale: Sale = {
       id: saleId,
-      customer_id: newSale.customer,
+      customer: newSale.customer,
       amount: newSale.total,
       created_at: new Date().toISOString(),
       status: 'completed'

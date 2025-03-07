@@ -10,9 +10,9 @@ import {
   Snowflake,
   ShoppingCart,
   Package,
-  Skating
+  IceCream
 } from "lucide-react";
-import { useAuth } from "@/hooks/useAuth";
+import { useAuth } from "@/hooks/auth";
 
 const Sidebar = () => {
   const location = useLocation();
@@ -40,7 +40,7 @@ const Sidebar = () => {
     {
       name: "Gerenciador de Pista",
       path: "/rink-manager",
-      icon: <Skating className="h-5 w-5" />,
+      icon: <IceCream className="h-5 w-5" />,
       permission: "rinkManager" as const,
     },
     {
